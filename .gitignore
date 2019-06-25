@@ -1,0 +1,10 @@
+*~
+*.csv
+*.sas7bdat
+*.json
+.Rhistory
+*.Rproj
+.Rdata
+*.pdf
+*.tex
+
