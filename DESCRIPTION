@@ -1,0 +1,29 @@
+Package: censreg
+Title: Linear regression with left-censored response
+Version: 0.1
+Authors@R: 
+    person(given = "Harry",
+           family = "Southworth",
+           role = c("aut", "cre"),
+           email = "first.last@example.com")
+Description: Linear regression with left-censored response and Gaussian
+    or t-distributed residuals.
+License: GPL 3
+Depends: 
+    methods,
+    R (>= 3.4.0),
+    Rcpp (>= 1.0.1)
+Imports: 
+    rstan (>= 2.18.2),
+    rstantools (>= 1.5.1)
+LinkingTo: 
+    BH (>= 1.69.0-1),
+    Rcpp (>= 1.0.1),
+    RcppEigen (>= 0.3.3.5.0),
+    rstan (>= 2.18.2),
+    StanHeaders (>= 2.18.1-10)
+Encoding: UTF-8
+LazyData: true
+NeedsCompilation: yes
+SystemRequirements: GNU make
+RoxygenNote: 6.1.1

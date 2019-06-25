@@ -14,9 +14,9 @@
 #' @iter The number of steps to run each Markov chain for. Defaults to
 #'   \code{iter = 2000}.
 #' @param lognu_params Prior parameters for the $t$-distribution used as the prior for
-#'   $\log \nu$. Defaults to \code{lognu_params = c(nu = 6, mu = 6, sigma = 10)}.
+#'   $log nu$. Defaults to \code{lognu_params = c(nu = 6, mu = 6, sigma = 10)}.
 #' @param sigma_params Prior parameters for the lognormal distribution used as the
-#'   prior for $\sigma$. Defaults to \code{sigma_params = c(mu = 1, sigma = 10)}.
+#'   prior for $sigma$. Defaults to \code{sigma_params = c(mu = 1, sigma = 10)}.
 #' @details The function uses the arguments to construct a call to \code{rstan::stan}.
 #'   Not many of the available options for \code{rstan::stan} are manipulable
 #'   through this function, but such things can be easily added if desired.
@@ -31,8 +31,9 @@
 #'   and the prior on the kurtosis parameter.
 #' @note It is in principle straightforward to generatlize the function to deal
 #'   with right-censoring as well, and to pass priors in.#'
-stan_censtreg <- stan_model(file = file.path(here::here(), "stan/censtreg.stan"),
-                            model_name = "censtreg")
+#' @export censtreg
+stan_censtreg <- rstan::stan_model(file = file.path(here::here(), "src/stan_files/censtreg.stan"),
+                                   model_name = "censtreg")
 
 censtreg <- function(formula, data, lower, chains=NULL, cores=NULL,
                      iter = 2000, warmup = 1000,
@@ -83,8 +84,8 @@ censtreg <- function(formula, data, lower, chains=NULL, cores=NULL,
 
   #o <- stan(file = file.path(here::here(), "stan/censtreg.stan"), data = sdata,
   #          iter = iter, cores = cores, chains = chains)
-  o <- sampling(stan_censtreg, data = sdata,
-                cores = cores, chains = chains, iter = iter, warmup = warmup)
+  o <- rstan::sampling(stan_censtreg, data = sdata,
+                       cores = cores, chains = chains, iter = iter, warmup = warmup)
 
   o <- list(model = o, call = thecall, formula = formula, data = data, lower = lower, names = colnames(X))
 
@@ -92,7 +93,7 @@ censtreg <- function(formula, data, lower, chains=NULL, cores=NULL,
   o
 }
 
-
+#' @method print censtreg
 print.censtreg <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
   print(x$call)
   cat("\n")
@@ -108,6 +109,8 @@ print.censtreg <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
 }
 
 
+#' @method summary censtreg
+#' @aliases print.summary.censtreg
 summary.censtreg <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
   o <- summary(x$model)$summary
   o <- o[substring(rownames(o), 1, 7) != "y_cens[", ]
@@ -124,6 +127,7 @@ print.summary.censtreg <- function(object, digits = max(3L, getOption("digits") 
   invisible()
 }
 
+#' @method plot censtreg
 plot.censtreg <- function(x, y, what = "trace"){
   m <- x$model
   s <- summary(m)$summary
@@ -138,6 +142,7 @@ plot.censtreg <- function(x, y, what = "trace"){
 #' @details A single predictor is simulated, the intercept, slope, scale and
 #'   kurtosis parameters being randomly sampled. The returned object is a list
 #'   containing the data frame and the parameters used to simulate it.
+#' @export simCensData
 simCensData <- function(n=1000){
   s <- sample(2:7, size=1)
   nu <- sample(2:10, size = 1)
