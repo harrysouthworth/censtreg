@@ -11,11 +11,11 @@ data {
   real sigma_params[2];
 }
 parameters {
-  real<upper=L> y_cens[N_cens];
+  real<lower=L> y_cens[N_cens];
   vector[K] beta;
   /* log(1) = 0 so constrain tail weight at Cauchy. Work with log(nu) because
-     experience shows the distribution can be extremely long-tailed to the right
-     otherwise. */
+  experience shows the distribution can be extremely long-tailed to the right
+  otherwise. */
   real<lower=0> lognu;
   real<lower=0> sigma;
 }
@@ -25,6 +25,6 @@ transformed parameters{
 model {
   sigma ~ lognormal(sigma_params[1], sigma_params[2]);
   lognu ~ student_t(lognu_params[1], lognu_params[2], lognu_params[3]);
-  y_obs ~ student_t(exp(lognu), x_obs * beta, sigma);
-  y_cens ~ student_t(exp(lognu), x_cens * beta, sigma);
+  y_obs ~ student_t(nu, x_obs * beta, sigma);
+  y_cens ~ student_t(nu, x_cens * beta, sigma);
 }

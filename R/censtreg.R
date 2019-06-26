@@ -1,6 +1,12 @@
 #' Linear regression for data with left-censored response and t-distributed residuals
 #' @param formula A formula.
-#' @para data A data frame.
+#' @param data A data frame. This should contain all the data, including the
+#'   censored values. Supposing censoring is from below, setting all response
+#'   variable values that are censored to be some value beneath the limit will
+#'   result in the correct model. Missing values are not treated as being
+#'   censored, but as missing. The function determines what is censored by the
+#'   values of the repsonse and the censoring limit, not by missing values or
+#'   censoring flags.
 #' @param lower An integer dictating the left censoring threshold. There is no
 #'   default and this is a required argument. Note that if the formula contains
 #'   a transformation of the response, you must remember to transform the lower
@@ -17,6 +23,10 @@
 #'   $log nu$. Defaults to \code{lognu_params = c(nu = 6, mu = 6, sigma = 10)}.
 #' @param sigma_params Prior parameters for the lognormal distribution used as the
 #'   prior for $sigma$. Defaults to \code{sigma_params = c(mu = 1, sigma = 10)}.
+#' @param nu A fixed value of kurtosis parameter nu, which might be helpful if there
+#'   are convergence issues and fixing this parameter is acceptable. Putting
+#'   \code{nu = Inf} results in the residuals being treated as Gaussian. Defaults
+#'   to \code{nu = NULL} and nu is treated as a random parameter in the model.
 #' @details The function uses the arguments to construct a call to \code{rstan::stan}.
 #'   Not many of the available options for \code{rstan::stan} are manipulable
 #'   through this function, but such things can be easily added if desired.
@@ -32,14 +42,15 @@
 #' @note It is in principle straightforward to generatlize the function to deal
 #'   with right-censoring as well, and to pass priors in.#'
 #' @export censtreg
-stan_censtreg <- rstan::stan_model(file = file.path(here::here(), "src/stan_files/censtreg.stan"),
-                                   model_name = "censtreg")
-
-censtreg <- function(formula, data, lower, chains=NULL, cores=NULL,
+censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NULL,
                      iter = 2000, warmup = 1000,
                      lognu_params = c(nu = 6, mu = 6, sigma = 10),
-                     sigma_params = c(mu = 1, sigma = 10)){
+                     sigma_params = c(mu = 1, sigma = 10),
+                     nu = NULL){
   thecall <- match.call()
+
+
+  stanmodel <- getCensModel(nu, upper)
 
   if (is.null(chains)){
     chains <- parallel::detectCores() - 1
@@ -70,8 +81,6 @@ censtreg <- function(formula, data, lower, chains=NULL, cores=NULL,
 
   K <- ncol(X)
 
-  i <- y > lower
-
   if (sum(i, na.rm=TRUE) == 0 | sum(i, na.rm=TRUE) == length(na.omit(y))){
     stop("either there are no observations beneath the threshold, or none above it")
   }
@@ -79,93 +88,22 @@ censtreg <- function(formula, data, lower, chains=NULL, cores=NULL,
   sdata <- list(y_obs = y[i],
                 x_obs = X[i, ], x_cens = X[!i, ],
                 K = ncol(X), N_obs = sum(i), N_cens = sum(!i),
-                L = lower,
-                lognu_params = lognu_params, sigma_params = sigma_params)
+                L = limit,
+                lognu_params = lognu_params, sigma_params = sigma_params,
+                nu = nu)
 
-  #o <- stan(file = file.path(here::here(), "stan/censtreg.stan"), data = sdata,
-  #          iter = iter, cores = cores, chains = chains)
-  o <- rstan::sampling(stan_censtreg, data = sdata,
+  o <- rstan::sampling(stanmod, data = sdata,
                        cores = cores, chains = chains, iter = iter, warmup = warmup)
 
-  o <- list(model = o, call = thecall, formula = formula, data = data, lower = lower, names = colnames(X))
+  o <- list(model = o, call = thecall, formula = formula, data = data,
+            limit = limit, upper = upper, names = colnames(X))
 
   class(o) <- "censtreg"
   o
 }
 
-#' @method print censtreg
-print.censtreg <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
-  print(x$call)
-  cat("\n")
-
-  o <- summary(x$model)$summary
-  o <- o[substring(rownames(o), 1, 7) != "y_cens[", c(1, 3)]
-  o <- o[!(rownames(o) %in% c("lognu", "lp__")), ]
-
-  rownames(o)[substring(rownames(o), 1, 5) == "beta["] <- x$names
-
-  print(t(o), digits = digits)
-  invisible()
-}
 
 
-#' @method summary censtreg
-#' @aliases print.summary.censtreg
-summary.censtreg <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
-  o <- summary(x$model)$summary
-  o <- o[substring(rownames(o), 1, 7) != "y_cens[", ]
-  o <- o[!(rownames(o) %in% c("lognu", "lp__")), ]
-  rownames(o)[substring(rownames(o), 1, 5) == "beta["] <- x$names
-
-  class(o) <- "summary.censtreg"
-  o
-}
-
-print.summary.censtreg <- function(object, digits = max(3L, getOption("digits") - 3L), ...){
-  object <- unclass(object)
-  print(t(object), digits = digits)
-  invisible()
-}
-
-#' @method plot censtreg
-plot.censtreg <- function(x, y, what = "trace"){
-  m <- x$model
-  s <- summary(m)$summary
-
-  what <- c(rownames(s)[startsWith(rownames(s), "beta[")], "sigma", "lognu")
-
-  traceplot(m, pars = what)
-}
-
-#' Simulate left-censored data to use with \code{censtreg}.
-#' @param n The number of datapoints to simulate. Defaults to \code{n = 1000}.
-#' @details A single predictor is simulated, the intercept, slope, scale and
-#'   kurtosis parameters being randomly sampled. The returned object is a list
-#'   containing the data frame and the parameters used to simulate it.
-#' @export simCensData
-simCensData <- function(n=1000){
-  s <- sample(2:7, size=1)
-  nu <- sample(2:10, size = 1)
-  a <- sample(1:5, size = 1)
-  b <- sample(seq(.5, 1.5, by=.1), size = 1)
-
-  x <- rt(n, df=nu)
-
-  y <- a + b * x + rt(n, df=nu) * s
-
-  list(data.frame(x, y), pars = c(a=a, b=b, s=s, nu=nu))
-}
-
-checkCenstreg <- function(model, data){
-  pars <- data$pars
-
-  s <- t(summary(model))
-
-  low <- s[4, ] > pars
-  high <- s[8, ] < pars
-
-  sum(c(low, high))
-}
 
 ################################################################################
 # I ran this and got 4 cases where the 95% posterior interval excluded a
@@ -181,7 +119,7 @@ if (FALSE){
     dd <- simCensData(n = 2000)
     plot(dd[[1]])
 
-    o <- censtreg(y ~ x, data = dd[[1]], chains = 4)
+    o <- censtreg(y ~ x, data = dd[[1]], chains = 4, lower = 0)
     print(summary(o))
     dd$pars
     plot(o)
