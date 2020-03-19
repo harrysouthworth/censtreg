@@ -10,10 +10,28 @@ getCensModel <- function(nu, upper){
     if (nu < 1){
       stop("nu < 1 not permitted")
     }
-    if (upper0) stanmod <- stan_censtreg_fixed_nu_u
+    if (upper) stanmod <- stan_censtreg_fixed_nu_u
     else stanmod <- stan_censtreg_fixed_nu
   }
 }
+
+checkForTransformations <- function(formula, thecall){
+  # Try to check if y is transformed
+  yname <- deparse(as.list(formula)[[2]])
+  ybracket <- grepl("\\(", yname)
+  ypower <- grepl("\\^", yname)
+
+  lname <- deparse(thecall$limit)
+  lbracket <- grepl("\\(", lname)
+  lpower <- grepl("\\^", lname)
+
+  if (ybracket & !lbracket | ypower & !lpower){
+    warning("response appears to be transformed but not the lower limit")
+  }
+
+  invisible()
+}
+
 
 
 #' Simulate left-censored data to use with \code{censtreg}.

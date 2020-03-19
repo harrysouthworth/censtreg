@@ -7,10 +7,15 @@
 #'   censored, but as missing. The function determines what is censored by the
 #'   values of the repsonse and the censoring limit, not by missing values or
 #'   censoring flags.
-#' @param lower An integer dictating the left censoring threshold. There is no
+#' @param limit An integer dictating the censoring threshold. There is no
 #'   default and this is a required argument. Note that if the formula contains
-#'   a transformation of the response, you must remember to transform the lower
-#'   limit as well.
+#'   a transformation of the response, you must remember to transform the
+#'   limit as well. The arguement \code{upper} dictates if the censoring
+#'   limit is a lower limit (i.e. left-censoring, censoring from below) or
+#'   an upper limit (right-censoring or censoring from above).
+#' @param upper Logical defaulting to \code{upper = FALSE} indicating that
+#'   \code{limit} defines a lower limit, not upper limit, for censoring (i.e.
+#'   left-censoring, not right-censoring).
 #' @param chains The number of Markov chains to run. Defaults to \code{chains = NULL}
 #'   and the function guesses the number based on the number of available cores,
 #'   specifically, the number of available cores less 1.
@@ -39,8 +44,12 @@
 #'   Stan User Guide, the differences being the ability to let the location
 #'   depend on covariates, the use of the t-distribution instead of the Gaussian,
 #'   and the prior on the kurtosis parameter.
-#' @note It is in principle straightforward to generatlize the function to deal
-#'   with right-censoring as well, and to pass priors in.#'
+#' @note If the kurtosis parameter is allowed to vary, it is not uncommon for
+#'   some of the Markov chains to exhibit weird behaviour. One solution is to
+#'   specify a tighter prior. Presumably, if you're letting the kurtosis vary,
+#'   you've reason to believe it is somewhere between 1 and 10 at the widest,
+#'   and more likely between 4 and 6, so priors that constrain the majority
+#'   of the mass to those kinds of intervals should only be weakly informative.
 #' @export censtreg
 censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NULL,
                      iter = 2000, warmup = 1000,
@@ -49,8 +58,7 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
                      nu = NULL){
   thecall <- match.call()
 
-
-  stanmodel <- getCensModel(nu, upper)
+  stanmod <- getCensModel(nu, upper)
 
   if (is.null(chains)){
     chains <- parallel::detectCores() - 1
@@ -63,23 +71,26 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
     cores <- min(parallel::detectCores() - 1, chains)
   }
 
-  # Try to check if y is transformed
-  yname <- deparse(as.list(formula)[[2]])
-  ybracket <- grepl("\\(", yname)
-  ypower <- grepl("\\^", yname)
-
-  lname <- deparse(thecall$lower)
-  lbracket <- grepl("\\(", lname)
-  lpower <- grepl("\\^", lname)
-
-  if (ybracket & !lbracket | ypower & !lpower){
-    warning("response appears to be transformed but not the lower limit")
-  }
+  checkForTransformations(formula, thecall)
 
   y <- model.response(model.frame(formula, data))
   X <- model.matrix(formula, data)
 
+  if (!upper){
+    bl <- data.frame(index = (1:length(y))[y < limit],
+                     observed = y[y < limit])
+  } else {
+    bl <- data.frame(index = (1:length(y))[y > limit],
+                     observed = y[y > limit])
+  }
+
   K <- ncol(X)
+
+  if (upper){
+    i <- y < limit
+  } else {
+    i <- y > limit
+  }
 
   if (sum(i, na.rm=TRUE) == 0 | sum(i, na.rm=TRUE) == length(na.omit(y))){
     stop("either there are no observations beneath the threshold, or none above it")
@@ -96,7 +107,7 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
                        cores = cores, chains = chains, iter = iter, warmup = warmup)
 
   o <- list(model = o, call = thecall, formula = formula, data = data,
-            limit = limit, upper = upper, names = colnames(X))
+            limit = limit, upper = upper, names = colnames(X), breaches = bl)
 
   class(o) <- "censtreg"
   o

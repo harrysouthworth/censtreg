@@ -1,13 +1,12 @@
-Package: censreg
-Title: Linear regression with left-censored response
+Package: censtreg
+Title: Linear regression with left-censored response and t-distributed residuals
 Version: 0.1
 Authors@R: 
     person(given = "Harry",
            family = "Southworth",
            role = c("aut", "cre"),
            email = "first.last@example.com")
-Description: Linear regression with left-censored response and Gaussian
-    or t-distributed residuals.
+Description: Linear regression with left-censored response and t-distributed residuals.
 License: GPL 3
 Depends: 
     methods,
@@ -26,4 +25,9 @@ Encoding: UTF-8
 LazyData: true
 NeedsCompilation: yes
 SystemRequirements: GNU make
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
+Collate:
+    'censtreg.R'
+    'helpers.R'
+    'methods.R'
+    'stanModels.R'
