@@ -15,7 +15,9 @@ censtreg(
   warmup = 1000,
   lognu_params = c(nu = 6, mu = 6, sigma = 10),
   sigma_params = c(mu = 1, sigma = 10),
-  nu = NULL
+  nu = NULL,
+  silent = FALSE,
+  ...
 )
 }
 \arguments{
@@ -48,6 +50,9 @@ specifically, the number of available cores less 1.}
 the function uses as many cores as chains, or the number of available cores
 less 1.}
 
+\item{iter}{The number of steps to run each Markov chain for. Defaults to
+\code{iter = 2000}.}
+
 \item{lognu_params}{Prior parameters for the $t$-distribution used as the prior for
 $log nu$. Defaults to \code{lognu_params = c(nu = 6, mu = 6, sigma = 10)}.}
 
@@ -58,6 +63,15 @@ prior for $sigma$. Defaults to \code{sigma_params = c(mu = 1, sigma = 10)}.}
 are convergence issues and fixing this parameter is acceptable. Putting
 \code{nu = Inf} results in the residuals being treated as Gaussian. Defaults
 to \code{nu = NULL} and nu is treated as a random parameter in the model.}
+
+\item{silent}{Whether to display Stan's update messages to screen. Defaults
+to \code{silent = FALSE}. You'd want to know if the chains were going wrong,
+but silencing them can be useful when code is embedded in knitr or
+rmarkdown code. If \code{silence = TRUE}, the function tells
+\code{rstan::sampling} not to be verbose, not to show warnings, not to
+print open progress, and not to refresh. Sheesh!}
+
+\item{...}{Additional arguments to \code{rstan::sampling}.}
 }
 \description{
 Linear regression for data with left-censored response and t-distributed residuals

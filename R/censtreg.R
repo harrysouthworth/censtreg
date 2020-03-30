@@ -22,7 +22,7 @@
 #' @param cores The number of cores to use. Defaults to \code{cores = NULL} and
 #'   the function uses as many cores as chains, or the number of available cores
 #'   less 1.
-#' @iter The number of steps to run each Markov chain for. Defaults to
+#' @param iter The number of steps to run each Markov chain for. Defaults to
 #'   \code{iter = 2000}.
 #' @param lognu_params Prior parameters for the $t$-distribution used as the prior for
 #'   $log nu$. Defaults to \code{lognu_params = c(nu = 6, mu = 6, sigma = 10)}.
@@ -32,6 +32,13 @@
 #'   are convergence issues and fixing this parameter is acceptable. Putting
 #'   \code{nu = Inf} results in the residuals being treated as Gaussian. Defaults
 #'   to \code{nu = NULL} and nu is treated as a random parameter in the model.
+#' @param silent Whether to display Stan's update messages to screen. Defaults
+#'   to \code{silent = FALSE}. You'd want to know if the chains were going wrong,
+#'   but silencing them can be useful when code is embedded in knitr or
+#'   rmarkdown code. If \code{silence = TRUE}, the function tells
+#'   \code{rstan::sampling} not to be verbose, not to show warnings, not to
+#'   print open progress, and not to refresh. Sheesh!
+#' @param ... Additional arguments to \code{rstan::sampling}.
 #' @details The function uses the arguments to construct a call to \code{rstan::stan}.
 #'   Not many of the available options for \code{rstan::stan} are manipulable
 #'   through this function, but such things can be easily added if desired.
@@ -55,7 +62,7 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
                      iter = 2000, warmup = 1000,
                      lognu_params = c(nu = 6, mu = 6, sigma = 10),
                      sigma_params = c(mu = 1, sigma = 10),
-                     nu = NULL){
+                     nu = NULL, silent = FALSE, ...){
   thecall <- match.call()
 
   stanmod <- getCensModel(nu, upper)
@@ -77,11 +84,11 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
   X <- model.matrix(formula, data)
 
   if (!upper){
-    bl <- data.frame(index = (1:length(y))[y < limit],
-                     observed = y[y < limit])
+    bl <- data.frame(index = (1:length(y))[y <= limit],
+                     observed = y[y <= limit])
   } else {
-    bl <- data.frame(index = (1:length(y))[y > limit],
-                     observed = y[y > limit])
+    bl <- data.frame(index = (1:length(y))[y >= limit],
+                     observed = y[y >= limit])
   }
 
   K <- ncol(X)
@@ -102,10 +109,19 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
                 L = limit,
                 lognu_params = lognu_params, sigma_params = sigma_params,
                 nu = nu)
-
-  o <- rstan::sampling(stanmod, data = sdata,
-                       cores = cores, chains = chains, iter = iter, warmup = warmup)
-
+  
+  if (silent){
+    o <- rstan::sampling(stanmod, data = sdata,
+                         cores = cores, chains = chains,
+                         iter = iter, warmup = warmup,
+                         refresh = 0, show_messages = FALSE, verbose = FALSE,
+                         open_progress = FALSE, ...)
+  } else {
+    o <- rstan::sampling(stanmod, data = sdata,
+                         cores = cores, chains = chains,
+                         iter = iter, warmup = warmup, ...)
+  }
+  
   o <- list(model = o, call = thecall, formula = formula, data = data,
             limit = limit, upper = upper, names = colnames(X), breaches = bl)
 
