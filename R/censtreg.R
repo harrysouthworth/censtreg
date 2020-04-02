@@ -57,10 +57,11 @@
 #'   you've reason to believe it is somewhere between 1 and 10 at the widest,
 #'   and more likely between 4 and 6, so priors that constrain the majority
 #'   of the mass to those kinds of intervals should only be weakly informative.
+#' @seealso fitted.censtreg
 #' @export censtreg
 censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NULL,
                      iter = 2000, warmup = 1000,
-                     lognu_params = c(nu = 6, mu = 6, sigma = 10),
+                     lognu_params = c(nu = 6, mu = log(6), sigma = 10),
                      sigma_params = c(mu = 1, sigma = 10),
                      nu = NULL, silent = FALSE, ...){
   thecall <- match.call()
@@ -109,7 +110,7 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
                 L = limit,
                 lognu_params = lognu_params, sigma_params = sigma_params,
                 nu = nu)
-  
+
   if (silent){
     o <- rstan::sampling(stanmod, data = sdata,
                          cores = cores, chains = chains,
@@ -121,40 +122,10 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
                          cores = cores, chains = chains,
                          iter = iter, warmup = warmup, ...)
   }
-  
+
   o <- list(model = o, call = thecall, formula = formula, data = data,
             limit = limit, upper = upper, names = colnames(X), breaches = bl)
 
   class(o) <- "censtreg"
   o
-}
-
-
-
-
-################################################################################
-# I ran this and got 4 cases where the 95% posterior interval excluded a
-# parameter. From manual inspection, in each case the true value was very
-# close to one of the limits of the interval and the posterior means were
-# fairly close to the truth
-if (FALSE){
-  errors <- vector(length=100)
-  pars <- matrix(ncol=4, nrow=100)
-  estimates <- vector(mode="list", length = 100)
-
-  for (i in 1:20){
-    dd <- simCensData(n = 2000)
-    plot(dd[[1]])
-
-    o <- censtreg(y ~ x, data = dd[[1]], chains = 4, lower = 0)
-    print(summary(o))
-    dd$pars
-    plot(o)
-
-    errors[i] <- checkCenstreg(o, dd)
-    pars[i, ] <- dd$pars
-    estimates[[i]] <- summary(o)
-  }
-
-  pairs(jitter(pars), col = ifelse(errors == 0, 1, 3))
 }

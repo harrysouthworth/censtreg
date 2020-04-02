@@ -17,9 +17,8 @@ print.censtreg <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
   invisible()
 }
 
-
-#' @export
 #' @aliases print.summary.censtreg
+#' @export
 summary.censtreg <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
   o <- rstan::summary(x$model)$summary
   o <- o[substring(rownames(o), 1, 7) != "y_cens[", ]
@@ -74,21 +73,21 @@ plot.censtreg <- function(x, y, what = "trace"){
 #' @return If the method is "lp" or "summary", a vector; otherwise a matrix.
 #' @details It's not very clear to me what use the returned values are when
 #'   \code{method = "summary"}.
-#' @export
 #' @method fitted censtreg
+#' @export
 fitted.censtreg <- function(object, method = "lp", what = mean, m = 10, ...){
   co <- coef(object)
-  
+
   X <- model.matrix(object$formula, object$data)
   y <- model.response(model.frame(object$formula, object$data))
-    
+
   if (method == "lp") {
     f <- c(X %*% co)
   } else {
     ynames <- names(object$model)
     ynames <- ynames[startsWith(ynames, "y_cens")]
     ycens <- rstan::extract(object$model, pars = ynames)
-  
+
     if (method == "summary"){
       ycens <- sapply(ycens, what)
       f <- c(X %*% co)
@@ -101,27 +100,92 @@ fitted.censtreg <- function(object, method = "lp", what = mean, m = 10, ...){
       ycens <- t(sapply(ycens, function(X){
         sample(X, size = m, replace = FALSE)
       }))
-      f <- matrix(rep(y, m), ncol = m, byrow = FALSE)
-      if (object$upper){
-        f[y >= object$limit, ] <- ycens
-      } else {
-        f[y <= object$limit, ] <- ycens
-      }
+      ycens <- matrix(ycens, ncol = m, byrow = FALSE)
+
+      cy <- ifelse(object$upper & y >= object$limit, NA,
+                   ifelse(!object$upper & y<= object$limit, NA, y))
+
+      f <- matrix(rep(cy, m), ncol = m, byrow = FALSE)
+
+      f[is.na(f)] <- ycens
     }
   }
-  
+
   f
 }
 
-#' @export
 #' @method coef censtreg
+#' @export
 coef.censtreg <- function(object, what = mean, ...){
   conames <- names(object$model)
   conames <- conames[startsWith(conames, "beta")]
-  
+
   nms <- colnames(model.matrix(object$formula, object$data))
-  
+
   co <- rstan::extract(object$model, conames)
   names(co) <- nms
   sapply(co, what)
+}
+
+#' Predicted values from a censtreg object
+#' @param object An object of class 'censtreg'.
+#' @param newdata A data frame with the predictors. If not specified, the
+#'   function passes its arguments through to \code{fitted} unchanged.
+#' @param se.fit Whether to include posterior sample deviations of the predictions
+#'   in the output. Defaults to \code{se.fit = FALSE}.
+#' @param ci.fit Whether to include confidence (credible) intervals in the output. Defaults
+#'   to \code{ci.fit = TRUE} and percentiles of the posterior predictive
+#'   distribution are included.
+#' @param level The confidence (credible) level when \code{ci.fit = TRUE}.
+#' @param method One of "lp" for the linear predictor, "summary" for a summary
+#'   of the simulated censored values, or "impute" for multiple imputation.
+#'   Only used if \code{newdata} is unspecified.
+#' @param what A function to summarize the coefficients and simulated censored
+#'   values. Defaults to \code{what = mean} and the mean is used.
+#'   Only used if \code{newdata} is unspecified.
+#' @param m The number of imputations of the censored response values.
+#'   Only used if \code{newdata} is unspecified.
+#' @method predict censtreg
+#' @export
+predict.censtreg <- function(object, newdata, se.fit = FALSE, ci.fit = TRUE,
+                             level = .950, method = "lp", what = mean, m = 10, ...){
+  if (missing(newdata)){
+    fitted(object, method = method, what = what, m = m, ...)
+  } else{
+    nms <- names(object$model)
+    betas <- nms[startsWith(nms, "beta")]
+    beta <- rstan::extract(object$model, pars = betas)
+    beta <- matrix(unlist(beta), ncol = length(beta), byrow = FALSE)
+
+    co <- coef(object)
+
+    X <- model.matrix(object$formula[-2], newdata)
+
+    fit <- c(X %*% co)
+    out <- matrix(fit, ncol = 1)
+    colnames(out) <- "fit"
+
+    p <- X %*% t(beta)
+
+    if (se.fit){
+      se <- apply(p, 1, sd)
+      out <- cbind(out, se)
+    }
+
+    if (ci.fit){
+      ci <- t(apply(p, 1, quantile, probs = c((1 - level) / 2, (1 + level) / 2)))
+      out <- cbind(out, ci)
+    }
+
+    out
+  }
+}
+
+#' @method resid censtreg
+#' @export
+resid.censtreg <- function(object, what = mean, ...){
+  f <- fitted(object, method = "lp", what = what)
+  y <- model.response(model.frame(object$formula, object$data))
+
+  y - f
 }

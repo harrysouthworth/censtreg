@@ -7,8 +7,6 @@ data {
   matrix[N_cens, K] x_cens;
   real y_obs[N_obs];
   real L;
-
-  real lognu_params[3];
   real sigma_params[2];
 }
 parameters {
