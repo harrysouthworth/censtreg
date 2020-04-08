@@ -27,7 +27,7 @@
 #' @param lognu_params Prior parameters for the $t$-distribution used as the prior for
 #'   $log nu$. Defaults to \code{lognu_params = c(nu = 6, mu = 6, sigma = 10)}.
 #' @param sigma_params Prior parameters for the lognormal distribution used as the
-#'   prior for $sigma$. Defaults to \code{sigma_params = c(mu = 1, sigma = 10)}.
+#'   prior for $sigma$. Defaults to \code{sigma_params = c(mu = 1, sigma = 100)}.
 #' @param nu A fixed value of kurtosis parameter nu, which might be helpful if there
 #'   are convergence issues and fixing this parameter is acceptable. Putting
 #'   \code{nu = Inf} results in the residuals being treated as Gaussian. Defaults
@@ -62,7 +62,7 @@
 censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NULL,
                      iter = 2000, warmup = 1000,
                      lognu_params = c(nu = 6, mu = log(6), sigma = 10),
-                     sigma_params = c(mu = 1, sigma = 10),
+                     sigma_params = c(mu = 1, sigma = 100),
                      nu = NULL, silent = FALSE, ...){
   thecall <- match.call()
 
@@ -83,6 +83,21 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
 
   y <- model.response(model.frame(formula, data))
   X <- model.matrix(formula, data)
+
+  if (sum(is.na(y)) > 0 | sum(is.na(X)) > 0){
+    stop("censtreg does not support missing values")
+  }
+
+  if (colnames(X)[1] == "(Intercept)"){
+    rX <- X[, -1, drop = FALSE]
+  } else {
+    rX <- X
+  }
+
+  u <- apply(rX[, -1, drop = FALSE], 2, function(z) length(unique(z)))
+  if (min(u) == 1){
+    stop("One or more covariates has zero variance")
+  }
 
   if (!upper){
     bl <- data.frame(index = (1:length(y))[y <= limit],
@@ -105,7 +120,7 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
   }
 
   sdata <- list(y_obs = y[i],
-                x_obs = X[i, ], x_cens = X[!i, ],
+                x_obs = X[i, ], x_cens = X[!i, , drop = FALSE],
                 K = ncol(X), N_obs = sum(i), N_cens = sum(!i),
                 L = limit,
                 lognu_params = lognu_params, sigma_params = sigma_params,

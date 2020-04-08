@@ -1,3 +1,4 @@
+#' @method print censtreg
 #' @export
 print.censtreg <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
   print(x$call)
@@ -17,9 +18,9 @@ print.censtreg <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
   invisible()
 }
 
-#' @aliases print.summary.censtreg
+#' @method summary censtreg
 #' @export
-summary.censtreg <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
+summary.censtreg <- function(x, ...){
   o <- rstan::summary(x$model)$summary
   o <- o[substring(rownames(o), 1, 7) != "y_cens[", ]
   o <- o[!(rownames(o) %in% c("lognu", "lp__")), ]
@@ -31,6 +32,7 @@ summary.censtreg <- function(x, digits = max(3L, getOption("digits") - 3L), ...)
   o
 }
 
+#' @method print summary.censtreg
 #' @export
 print.summary.censtreg <- function(object, digits = max(3L, getOption("digits") - 3L), ...){
   breaches <- object[[2]]
@@ -50,6 +52,7 @@ print.summary.censtreg <- function(object, digits = max(3L, getOption("digits") 
   invisible()
 }
 
+#' @method plot censtreg
 #' @export
 plot.censtreg <- function(x, y, what = "trace"){
   m <- x$model
@@ -181,9 +184,9 @@ predict.censtreg <- function(object, newdata, se.fit = FALSE, ci.fit = TRUE,
   }
 }
 
-#' @method resid censtreg
+#' @method residuals censtreg
 #' @export
-resid.censtreg <- function(object, what = mean, ...){
+residuals.censtreg <- function(object, what = mean, ...){
   f <- fitted(object, method = "lp", what = what)
   y <- model.response(model.frame(object$formula, object$data))
 

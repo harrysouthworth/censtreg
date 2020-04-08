@@ -13,8 +13,8 @@ censtreg(
   cores = NULL,
   iter = 2000,
   warmup = 1000,
-  lognu_params = c(nu = 6, mu = 6, sigma = 10),
-  sigma_params = c(mu = 1, sigma = 10),
+  lognu_params = c(nu = 6, mu = log(6), sigma = 10),
+  sigma_params = c(mu = 1, sigma = 100),
   nu = NULL,
   silent = FALSE,
   ...
@@ -57,7 +57,7 @@ less 1.}
 $log nu$. Defaults to \code{lognu_params = c(nu = 6, mu = 6, sigma = 10)}.}
 
 \item{sigma_params}{Prior parameters for the lognormal distribution used as the
-prior for $sigma$. Defaults to \code{sigma_params = c(mu = 1, sigma = 10)}.}
+prior for $sigma$. Defaults to \code{sigma_params = c(mu = 1, sigma = 100)}.}
 
 \item{nu}{A fixed value of kurtosis parameter nu, which might be helpful if there
 are convergence issues and fixing this parameter is acceptable. Putting
@@ -97,4 +97,7 @@ If the kurtosis parameter is allowed to vary, it is not uncommon for
   you've reason to believe it is somewhere between 1 and 10 at the widest,
   and more likely between 4 and 6, so priors that constrain the majority
   of the mass to those kinds of intervals should only be weakly informative.
+}
+\seealso{
+fitted.censtreg
 }
