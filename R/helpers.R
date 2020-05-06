@@ -1,5 +1,5 @@
 #' Get the compiled Stan model given nu and upper
-getCensModel <- function(nu, upper){
+getCensModel_estimate <- function(nu, upper){
   if (is.null(nu)){
     if (upper) stanmod <- stan_censtreg_u
     else stanmod <- stan_censtreg
@@ -14,6 +14,34 @@ getCensModel <- function(nu, upper){
     else stanmod <- stan_censtreg_fixed_nu
   }
 }
+
+getCensModel_integrate <- function(nu, upper){
+  if (is.null(nu)){
+    if (upper) stanmod <- stan_censtreg_u_int
+    else stanmod <- stan_censtreg_int
+  } else if (is.infinite(nu)){
+    if (upper) stanmod <- stan_censnreg_u_int
+    else stanmod <- stan_censnreg_int
+  } else { # nu is a specified constant
+    if (nu < 1){
+      stop("nu < 1 not permitted")
+    }
+    if (upper) stanmod <- stan_censtreg_fixed_nu_u_int
+    else stanmod <- stan_censtreg_fixed_nu_int
+  }
+}
+
+getCensModel <- function(nu, upper, method){
+  if (method == "estimate"){
+    getCensModel_estimate(nu, upper)
+  } else if (method == "integrate"){
+    getCensModel_integrate(nu, upper)
+  } else {
+    stop("method argument in call to censtreg should be either 'estimate' or 'integrate'")
+  }
+}
+
+
 
 checkForTransformations <- function(formula, thecall){
   # Try to check if y is transformed

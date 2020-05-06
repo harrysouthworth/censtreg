@@ -60,13 +60,14 @@
 #' @seealso fitted.censtreg
 #' @export censtreg
 censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NULL,
+                     method = "estimate",
                      iter = 2000, warmup = 1000,
                      lognu_params = c(nu = 6, mu = log(6), sigma = 10),
                      sigma_params = c(mu = 1, sigma = 100),
                      nu = NULL, silent = FALSE, ...){
   thecall <- match.call()
 
-  stanmod <- getCensModel(nu, upper)
+  stanmod <- getCensModel(nu, upper, method)
 
   if (is.null(chains)){
     chains <- parallel::detectCores() - 1
@@ -121,6 +122,11 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
 
   #QR <- qr.Q(X) * sqrt(nrow(X) - 1)
   #R <- qr.R(X) / sqrt(nrow(X) - 1)
+
+  if (method == "integrate"){
+    y <- y[!i]
+    X <- X[!i]
+  }
 
   sdata <- list(y_obs = y[i],
                 x_obs = X[i, ], x_cens = X[!i, , drop = FALSE],

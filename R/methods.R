@@ -46,9 +46,9 @@ print.summary.censtreg <- function(object, digits = max(3L, getOption("digits") 
 
   cat("\n")
 
-  object <- object[[1]]
+  object <- t(object[[1]])
 
-  print(t(object), digits = digits)
+  print(object, digits = digits)
   invisible()
 }
 
@@ -192,3 +192,20 @@ residuals.censtreg <- function(object, what = mean, ...){
 
   y - f
 }
+
+
+#' Compute WAIC from a censtreg object
+#' @param object A censtreg model, as computed by \code{censtreg}.
+#' @details The code has been copied and pasted from the Stan GitHub issues
+#'   pages
+waic.censtreg <- function(object){
+  stanfit <- object$model
+  log_lik <- extract (stanfit, "log_lik")$log_lik
+  lppd <- sum (log (colMeans(exp(log_lik))))
+  p_waic_1 <- 2*sum (log(colMeans(exp(log_lik))) - colMeans(log_lik))
+  p_waic_2 <- sum (colVars(log_lik))
+  waic_2 <- -2*lppd + 2*p_waic_2
+  return (list (waic=waic_2, p_waic=p_waic_2, lppd=lppd, p_waic_1=p_waic_1))
+}
+
+
