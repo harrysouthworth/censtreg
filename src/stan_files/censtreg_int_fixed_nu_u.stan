@@ -17,5 +17,5 @@ parameters {
 model {
   sigma ~ lognormal(sigma_params[1], sigma_params[2]);
   y_obs ~ student_t(nu, x_obs * beta, sigma);
-  target += N_cens * student_t_lcdf(nu, U | x_cens * beta, sigma);
+  target += N_cens * student_t_lcdf(U | nu, x_cens * beta, sigma);
 }
