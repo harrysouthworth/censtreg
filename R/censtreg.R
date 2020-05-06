@@ -94,7 +94,7 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
     rX <- X
   }
 
-  u <- apply(rX[, -1, drop = FALSE], 2, function(z) length(unique(z)))
+  u <- apply(rX, 2, function(z) length(unique(z)))
   if (min(u) == 1){
     stop("One or more covariates has zero variance")
   }
@@ -118,6 +118,9 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
   if (sum(i, na.rm=TRUE) == 0 | sum(i, na.rm=TRUE) == length(na.omit(y))){
     stop("either there are no observations beneath the threshold, or none above it")
   }
+
+  #QR <- qr.Q(X) * sqrt(nrow(X) - 1)
+  #R <- qr.R(X) / sqrt(nrow(X) - 1)
 
   sdata <- list(y_obs = y[i],
                 x_obs = X[i, ], x_cens = X[!i, , drop = FALSE],
