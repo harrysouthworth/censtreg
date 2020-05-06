@@ -22,6 +22,9 @@
 #' @param cores The number of cores to use. Defaults to \code{cores = NULL} and
 #'   the function uses as many cores as chains, or the number of available cores
 #'   less 1.
+#' @param method Either "estimate" the default, in which case the censored values
+#'   are treated like parameters and are estimate; or "integrate", in which case
+#'   the censored values are integrated out.
 #' @param iter The number of steps to run each Markov chain for. Defaults to
 #'   \code{iter = 2000}.
 #' @param lognu_params Prior parameters for the $t$-distribution used as the prior for
@@ -116,6 +119,8 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
     i <- y > limit
   }
 
+
+
   if (sum(i, na.rm=TRUE) == 0 | sum(i, na.rm=TRUE) == length(na.omit(y))){
     stop("either there are no observations beneath the threshold, or none above it")
   }
@@ -123,13 +128,8 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
   #QR <- qr.Q(X) * sqrt(nrow(X) - 1)
   #R <- qr.R(X) / sqrt(nrow(X) - 1)
 
-  if (method == "integrate"){
-    y <- y[!i]
-    X <- X[!i]
-  }
-
   sdata <- list(y_obs = y[i],
-                x_obs = X[i, ], x_cens = X[!i, , drop = FALSE],
+                x_obs = X[i, , drop = FALSE], x_cens = X[!i, , drop = FALSE],
                 K = ncol(X), N_obs = sum(i), N_cens = sum(!i),
                 L = limit,
                 lognu_params = lognu_params, sigma_params = sigma_params,

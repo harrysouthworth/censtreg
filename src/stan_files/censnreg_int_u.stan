@@ -6,7 +6,7 @@ data {
   matrix[N_cens, K] x_cens;
 
   real y_obs[N_obs];
-  real L;
+  real U;
 
   real sigma_params[2];
 }
@@ -17,5 +17,5 @@ parameters {
 model {
   sigma ~ lognormal(sigma_params[1], sigma_params[2]);
   y_obs ~ normal(x_obs * beta, sigma);
-  target += N_cens * normal_lcdf(L | x_cens * beta, sigma);
+  target += N_cens * normal_lccdf(U | x_cens * beta, sigma);
 }

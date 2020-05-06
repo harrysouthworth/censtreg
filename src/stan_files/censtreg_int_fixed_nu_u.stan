@@ -4,9 +4,9 @@ data {
   int<lower=0> K;
   matrix[N_obs, K] x_obs;
   matrix[N_cens, K] x_cens;
-
+  real<lower=0> nu;
   real y_obs[N_obs];
-  real L;
+  real U;
 
   real sigma_params[2];
 }
@@ -16,6 +16,6 @@ parameters {
 }
 model {
   sigma ~ lognormal(sigma_params[1], sigma_params[2]);
-  y_obs ~ normal(x_obs * beta, sigma);
-  target += N_cens * normal_lcdf(L | x_cens * beta, sigma);
+  y_obs ~ student_t(nu, x_obs * beta, sigma);
+  target += N_cens * student_t_lcdf(nu, U | x_cens * beta, sigma);
 }
