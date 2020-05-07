@@ -1,6 +1,6 @@
 data {
   int<lower=0> N_obs;
-  int<lower=0>N_cens;
+  int<lower=0> N_cens;
   int<lower=0> K;
   matrix[N_obs, K] x_obs;
   matrix[N_cens, K] x_cens;

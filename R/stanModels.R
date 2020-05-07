@@ -25,16 +25,16 @@ stan_censnreg_int <- rstan::stan_model(file = file.path(here::here(), "src/stan_
 stan_censtreg_int <- rstan::stan_model(file = file.path(here::here(), "src/stan_files/censtreg_int.stan"),
                                        model_name = "censtreg_int")
 
-stan_censtreg_fixed_nu_int <- rstan::stan_model(file = file.path(here::here(), "src/stan_files/censtreg_int_fixed_nu.stan"),
+stan_censtreg_fixed_nu_int <- rstan::stan_model(file = file.path(here::here(), "src/stan_files/censtreg_fixed_nu_int.stan"),
                                                 model_name = "censtreg_fixed_nu_int")
 
 # Models for data censored from above, integrating out the censored values.
 
-stan_censnreg_u_int <- rstan::stan_model(file = file.path(here::here(), "src/stan_files/censnreg_int_u.stan"),
+stan_censnreg_u_int <- rstan::stan_model(file = file.path(here::here(), "src/stan_files/censnreg_u_int.stan"),
                                          model_name = "censnreg_u_int")
 
-stan_censtreg_u_int <- rstan::stan_model(file = file.path(here::here(), "src/stan_files/censtreg_int_u.stan"),
+stan_censtreg_u_int <- rstan::stan_model(file = file.path(here::here(), "src/stan_files/censtreg_u_int.stan"),
                                          model_name = "censtreg_u_int")
 
-stan_censtreg_fixed_nu_u_int <- rstan::stan_model(file = file.path(here::here(), "src/stan_files/censtreg_int_fixed_nu_u.stan"),
+stan_censtreg_fixed_nu_u_int <- rstan::stan_model(file = file.path(here::here(), "src/stan_files/censtreg_fixed_nu_u_int.stan"),
                                                   model_name = "censtreg_fixed_nu_u_int")

@@ -4,7 +4,6 @@ data {
   int<lower=0> K;
   matrix[N_obs, K] x_obs;
   matrix[N_cens, K] x_cens;
-
   real y_obs[N_obs];
   real L;
 

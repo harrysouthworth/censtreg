@@ -5,7 +5,7 @@ data {
   matrix[N_obs, K] x_obs;
   matrix[N_cens, K] x_cens;
   real y_obs[N_obs];
-  real U;
+  real L;
 
   real lognu_params[3];
   real sigma_params[2];
@@ -22,5 +22,5 @@ model {
   sigma ~ lognormal(sigma_params[1], sigma_params[2]);
   lognu ~ student_t(lognu_params[1], lognu_params[2], lognu_params[3]);
   y_obs ~ student_t(nu, x_obs * beta, sigma);
-  target += N_cens * student_t_lcdf(U | nu, x_cens * beta, sigma);
+  target += N_cens * student_t_lccdf(L | nu, x_cens * beta, sigma);
 }

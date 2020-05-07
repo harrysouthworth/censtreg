@@ -125,9 +125,6 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
     stop("either there are no observations beneath the threshold, or none above it")
   }
 
-  #QR <- qr.Q(X) * sqrt(nrow(X) - 1)
-  #R <- qr.R(X) / sqrt(nrow(X) - 1)
-
   sdata <- list(y_obs = y[i],
                 x_obs = X[i, , drop = FALSE], x_cens = X[!i, , drop = FALSE],
                 K = ncol(X), N_obs = sum(i), N_cens = sum(!i),
