@@ -17,5 +17,5 @@ parameters {
 model {
   sigma ~ lognormal(sigma_params[1], sigma_params[2]);
   y_obs ~ normal(x_obs * beta, sigma);
-  target += N_cens * normal_lccdf(U | x_cens * beta, sigma);
+  target += normal_lccdf(U | x_cens * beta, sigma);
 }

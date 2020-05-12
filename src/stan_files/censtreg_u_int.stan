@@ -22,5 +22,5 @@ model {
   sigma ~ lognormal(sigma_params[1], sigma_params[2]);
   lognu ~ student_t(lognu_params[1], lognu_params[2], lognu_params[3]);
   y_obs ~ student_t(nu, x_obs * beta, sigma);
-  target += N_cens * student_t_lccdf(L | nu, x_cens * beta, sigma);
+  target += student_t_lccdf(L | nu, x_cens * beta, sigma);
 }
