@@ -45,9 +45,9 @@
 #' @details The function uses the arguments to construct a call to \code{rstan::stan}.
 #'   Not many of the available options for \code{rstan::stan} are manipulable
 #'   through this function, but such things can be easily added if desired.
-#'   The function assumes the residuals are t-distributed and the kurtosis parameter
+#'   If the kurtosis parameter
 #'   is treated as random. Computations are done on the scale of the log of the
-#'   kurtosis parameter, and a t-distribution centered at 6 with kurtosis parameter
+#'   kurtosis parameter, and a t-distribution centered at log(6) with kurtosis parameter
 #'   6 is used as a prior because experience suggests taking logs and giving the
 #'   sampler some clues about likely values aids chain convergence.
 #'   The Stan code is largely copied from Section 4.1, "Censored Data" of the
@@ -65,12 +65,16 @@
 censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NULL,
                      method = "estimate",
                      iter = 2000, warmup = 1000,
-                     lognu_params = c(nu = 6, mu = log(6), sigma = 10),
+                     lognu_params = c(nu = 6, mu = log(6), sigma = 1),
                      sigma_params = c(mu = 1, sigma = 100),
                      nu = NULL, silent = FALSE, ...){
   thecall <- match.call()
 
-  stanmod <- getCensModel(nu, upper, method)
+  if (any(y == limit)){
+    stop("values of y exactly at the limit: make them unabmiguous by putting them beyond the limit")
+  }
+
+  checkPriorParams(lognu_params, sigma_params)
 
   if (is.null(chains)){
     chains <- parallel::detectCores() - 1
@@ -103,27 +107,24 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
     stop("One or more covariates has zero variance")
   }
 
-  if (!upper){
-    bl <- data.frame(index = (1:length(y))[y <= limit],
-                     observed = y[y <= limit])
-  } else {
-    bl <- data.frame(index = (1:length(y))[y >= limit],
-                     observed = y[y >= limit])
-  }
-
   K <- ncol(X)
 
   if (upper){
-    i <- y < limit
+    y <- -y
+    limit <- -limit
+    bl <- data.frame(index = (1:length(y))[y < limit], observed = -y[y < limit])
   } else {
-    i <- y > limit
+    bl <- data.frame(index = (1:length(y))[y < limit], observed = y[y < limit])
   }
 
-
-
-  if (sum(i, na.rm=TRUE) == 0 | sum(i, na.rm=TRUE) == length(na.omit(y))){
-    stop("either there are no observations beneath the threshold, or none above it")
+  if (sum(i) == 0){
+    stop("there are no uncensored values")
   }
+
+  i <- y > limit
+
+  # getCensModel reports messages for debugging & testing purposes. We don't want them here
+  stanmod <- suppressMessages(getCensModel(nu, method))
 
   sdata <- list(y_obs = y[i],
                 x_obs = X[i, , drop = FALSE], x_cens = X[!i, , drop = FALSE],
@@ -142,6 +143,18 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
     o <- rstan::sampling(stanmod, data = sdata,
                          cores = cores, chains = chains,
                          iter = iter, warmup = warmup, ...)
+  }
+
+  if (upper){
+    limit <- -limit
+    # o@samples is a list with one entry for each chain
+    # Each chain is a list, not matrix, with an entry for each parameter
+    o@sim$samples <- lapply(o@sim$samples, function(X){
+      which <- (1:length(X))[substring(names(X), 1, 5) == "beta["]
+      X[which] <- lapply(X[which], function(A) -A)
+
+      X
+    })
   }
 
   o <- list(model = o, call = thecall, formula = formula, data = data,

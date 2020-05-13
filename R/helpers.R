@@ -1,41 +1,41 @@
-#' Get the compiled Stan model given nu and upper
-getCensModel_estimate <- function(nu, upper){
+#' Get the compiled Stan model given nu
+getCensModel_estimate <- function(nu){
   if (is.null(nu)){
-    if (upper) stanmod <- stan_censtreg_u
-    else stanmod <- stan_censtreg
+    message("stan_censtreg")
+    stanmod <- stan_censtreg
   } else if (is.infinite(nu)){
-    if (upper) stanmod <- stan_censnreg_u
-    else stanmod <- stan_censnreg
+    message("stan_censnreg")
+    stanmod <- stan_censnreg
   } else { # nu is a specified constant
     if (nu < 1){
       stop("nu < 1 not permitted")
     }
-    if (upper) stanmod <- stan_censtreg_fixed_nu_u
-    else stanmod <- stan_censtreg_fixed_nu
+    message("stan_censtreg_fixed_nu")
+    stanmod <- stan_censtreg_fixed_nu
   }
 }
 
-getCensModel_integrate <- function(nu, upper){
+getCensModel_integrate <- function(nu){
   if (is.null(nu)){
-    if (upper) stanmod <- stan_censtreg_u_int
-    else stanmod <- stan_censtreg_int
+    message("stat_censtreg_int")
+    stanmod <- stan_censtreg_int
   } else if (is.infinite(nu)){
-    if (upper) stanmod <- stan_censnreg_u_int
-    else stanmod <- stan_censnreg_int
+    message("stat_censnreg_int")
+    stanmod <- stan_censnreg_int
   } else { # nu is a specified constant
     if (nu < 1){
       stop("nu < 1 not permitted")
     }
-    if (upper) stanmod <- stan_censtreg_fixed_nu_u_int
-    else stanmod <- stan_censtreg_fixed_nu_int
+    message("stan_censtreg_fixed_nu_int")
+    stanmod <- stan_censtreg_fixed_nu_int
   }
 }
 
-getCensModel <- function(nu, upper, method){
+getCensModel <- function(nu, method){
   if (method == "estimate"){
-    getCensModel_estimate(nu, upper)
+    getCensModel_estimate(nu)
   } else if (method == "integrate"){
-    getCensModel_integrate(nu, upper)
+    getCensModel_integrate(nu)
   } else {
     stop("method argument in call to censtreg should be either 'estimate' or 'integrate'")
   }
@@ -90,4 +90,16 @@ checkCenstreg <- function(model, data){
   high <- s[8, ] < pars
 
   sum(c(low, high))
+}
+
+checkPriorParams <- function(lognu_params, sigma_params){
+  if (length(lognu_params) != 3 | !is.numeric(lognu_params)){
+    stop("lognu_params should be a numeric vector of length 3")
+  }
+
+  if (length(sigma_params) != 2 | !is.numeric(sigma_params)){
+    stop("sigma_params should be a numeric vector of length 2")
+  }
+
+  invisible()
 }

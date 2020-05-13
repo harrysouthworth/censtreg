@@ -15,6 +15,9 @@ parameters {
   real<lower=0> lognu;
   real<lower=0> sigma;
 }
+transformed parameters{
+  real nu = exp(lognu);
+}
 model {
   sigma ~ lognormal(sigma_params[1], sigma_params[2]);
   lognu ~ student_t(lognu_params[1], lognu_params[2], lognu_params[3]);

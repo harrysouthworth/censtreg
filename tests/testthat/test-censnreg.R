@@ -27,18 +27,18 @@ test_that("Left-censored regression: posterior means match generating mechanism"
     o[[i]] <- censtreg(y ~ x, data = d, limit = th, silent = TRUE,
                        method = "integrate", nu = Inf)
 
-    sm <- coef(summary(m[[i]]))
+    sm <- coef(summary(m[[i]], probs = c(.01, .99)))
     lo <- sm[, 4]
-    hi <- sm[, 8]
+    hi <- sm[, 5]
 
     truth <- c(a, b, s)
 
     testthat::expect_true(all(between(truth, lo, hi)),
                           label = "Coefficients look ok: left censored, estimated")
 
-    sm <- coef(summary(o[[i]]))
+    sm <- coef(summary(o[[i]], probs = c(.01, .99)))
     lo <- sm[, 4]
-    hi <- sm[, 8]
+    hi <- sm[, 5]
 
     testthat::expect_true(all(between(truth, lo, hi)),
                           label = "Coefficients look ok: left censored, integrated")
@@ -47,8 +47,7 @@ test_that("Left-censored regression: posterior means match generating mechanism"
 })
 
 test_that("Right-censored regression looks ok", {
-
-  set.seed(20200330)
+  set.seed(20200513)
 
   between <- function(x, lower, upper){
     x < upper & x > lower
@@ -74,11 +73,19 @@ test_that("Right-censored regression looks ok", {
     o[[i]] <- censtreg(y ~ x, data = d, limit = th, method = "integrate",
                        silent = TRUE, upper = TRUE, nu = Inf)
 
-    s <- coef(summary(m[[i]]))
-    lo <- s[, 1] - 2 * s[, 2]
-    hi <- s[, 1] + 2 * s[, 2]
+    sm <- coef(summary(m[[i]], probs = c(.01, .99)))
+    truth <- c(a, b, s)
+    lo <- sm[, 4]
+    hi <- sm[, 5]
 
-    testthat::expect_true(all(between(s[, 1], lo, hi)),
+    testthat::expect_true(all(between(truth, lo, hi)),
+                          label = "Coefficients look ok: right censored")
+
+    sm <- coef(summary(m[[o]], probs = c(.01, .99)))
+    lo <- sm[, 4]
+    hi <- sm[, 5]
+
+    testthat::expect_true(all(between(truth, lo, hi)),
                           label = "Coefficients look ok: right censored")
   }
 })
