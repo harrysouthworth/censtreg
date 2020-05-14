@@ -2,7 +2,7 @@ library(censtreg)
 library(testthat)
 
 test_that("Left-censored regression: posterior means match generating mechanism", {
-  set.seed(20200330)
+  set.seed(20200514)
 
   between <- function(x, lower, upper){
     x < upper & x > lower

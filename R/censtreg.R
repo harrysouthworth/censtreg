@@ -70,10 +70,6 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
                      nu = NULL, silent = FALSE, ...){
   thecall <- match.call()
 
-  if (any(y == limit)){
-    stop("values of y exactly at the limit: make them unabmiguous by putting them beyond the limit")
-  }
-
   checkPriorParams(lognu_params, sigma_params)
 
   if (is.null(chains)){
@@ -91,6 +87,10 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
 
   y <- model.response(model.frame(formula, data))
   X <- model.matrix(formula, data)
+
+  if (any(y == limit)){
+    stop("values of y exactly at the limit: make them unabmiguous by putting them beyond the limit")
+  }
 
   if (sum(is.na(y)) > 0 | sum(is.na(X)) > 0){
     stop("censtreg does not support missing values")
@@ -117,11 +117,12 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
     bl <- data.frame(index = (1:length(y))[y < limit], observed = y[y < limit])
   }
 
+
+  i <- y > limit
+
   if (sum(i) == 0){
     stop("there are no uncensored values")
   }
-
-  i <- y > limit
 
   # getCensModel reports messages for debugging & testing purposes. We don't want them here
   stanmod <- suppressMessages(getCensModel(nu, method))
