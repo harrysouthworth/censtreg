@@ -117,10 +117,9 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
     bl <- data.frame(index = (1:length(y))[y < limit], observed = y[y < limit])
   }
 
-
   i <- y > limit
 
-  if (sum(i) == 0){
+  if (sum(i) == length(y)){
     stop("there are no uncensored values")
   }
 

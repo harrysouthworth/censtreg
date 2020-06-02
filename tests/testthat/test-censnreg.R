@@ -9,6 +9,7 @@ test_that("Left-censored regression: posterior means match generating mechanism"
   m <- o <- list(); i <- 1
 
   for (i in 1:10){
+    message(i)
     a <- sample(-10:10, size = 1)
     b <- runif(1, -.5, 1.5)
     s <- abs(rnorm(1, 1, 4))
@@ -56,17 +57,18 @@ test_that("Right-censored regression looks ok", {
   m <- o <- list(); i <- 1
 
   for (i in 1:10){
+    message(i)
     a <- sample(-10:10, size = 1)
     b <- runif(1, -.5, 1.5)
     s <- abs(rnorm(1, 1, 4))
-    nu <- runif(1, 3, 7)
+    nu <- runif(1, 20, 100)
 
     x <- rt(1000, nu) * s
     y <- a +  b * x + rt(1000, nu) * s
 
     th <- quantile(y, prob = runif(1, .6, .95))
 
-    d <- data.frame(x = x, y = ifelse (y <= th, y, th))
+    d <- data.frame(x = x, y = ifelse (y <= th, y, Inf))
 
     m[[i]] <- censtreg(y ~ x, data = d, limit = th, silent = TRUE, upper = TRUE,
                        nu = Inf)
@@ -81,7 +83,7 @@ test_that("Right-censored regression looks ok", {
     testthat::expect_true(all(between(truth, lo, hi)),
                           label = "Coefficients look ok: right censored")
 
-    sm <- coef(summary(m[[o]], probs = c(.01, .99)))
+    sm <- coef(summary(o[[i]], probs = c(.01, .99)))
     lo <- sm[, 4]
     hi <- sm[, 5]
 

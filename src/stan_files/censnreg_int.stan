@@ -5,7 +5,7 @@ data {
   matrix[N_obs, K] x_obs;
   matrix[N_cens, K] x_cens;
   real y_obs[N_obs];
-  real L;
+  real L[N_cens];
 
   real sigma_params[2];
 }

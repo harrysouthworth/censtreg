@@ -23,6 +23,7 @@ print.censtreg <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
 summary.censtreg <- function(x, probs = c(.025, .25, .5, .75, .975),...){
   o <- rstan::summary(x$model, probs = probs)$summary
   o <- o[substring(rownames(o), 1, 7) != "y_cens[", ]
+  o <- o[substring(rownames(o), 1, 6) != "y_tmp[", ]
   o <- o[!(rownames(o) %in% c("lognu", "lp__")), ]
   rownames(o)[substring(rownames(o), 1, 5) == "beta["] <- x$names
 
