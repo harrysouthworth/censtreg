@@ -1,12 +1,12 @@
 Package: censtreg
 Title: Linear regression with left-censored response and t-distributed residuals
-Version: 0.2
+Version: 0.3
 Authors@R: 
     person(given = "Harry",
            family = "Southworth",
            role = c("aut", "cre"),
            email = "harry@dataclarityconsulting.com")
-Description: Linear regression with left-censored response and t-distributed residuals.
+Description: Linear regression with censored response and t-distributed residuals.
 License: GPL 3
 Depends: 
     methods,

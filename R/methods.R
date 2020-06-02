@@ -208,4 +208,24 @@ waic.censtreg <- function(object){
   return (list (waic=waic_2, p_waic=p_waic_2, lppd=lppd, p_waic_1=p_waic_1))
 }
 
+ggplot.censtreg <- function(data, mapping = NULL, ..., environment = NULL){
+  pd <- data.frame(residuals = resid(data), fitted = fitted(data))
+  y <- model.response(model.frame(data$formula, data$data))
+  pd$y <- y
 
+  pd$limit <- data$limit
+  pd$censored <- if (data$upper) { pd$y >= pd$limit } else { pd$y <= pd$limit }
+
+  p1 <- ggplot(pd, aes(fitted, residuals, color = censored)) +
+    geom_hline(yintercept = 0) +
+    geom_point() +
+    ylab("Residuals") + xlab("Fitted values")
+
+
+  p2 <- ggplot(pd, aes(y, fitted, color = censored)) +
+    geom_abline(intercept = 0, slope = 1) +
+    geom_point() +
+    ylab("Fitted values") + xlab("Observed values")
+
+  gridExtra::grid.arrange(p1, p2, ncol = 2)
+}

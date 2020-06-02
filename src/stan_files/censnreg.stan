@@ -5,13 +5,17 @@ data {
   matrix[N_obs, K] x_obs;
   matrix[N_cens, K] x_cens;
   real y_obs[N_obs];
-  real L;
-
-  //real lognu_params[3];
+  real L[N_cens];
   real sigma_params[2];
 }
 parameters {
-  real<upper=L> y_cens[N_cens];
+  real y_cens[N_cens];
+  for (i in 1:N_cens){
+    real<upper=L[i]> tmp;
+    tmp = y_cens[i];
+    y_cens[i] = tmp;
+  }
+  //vector[N_cens]<upper=L> y_cens;
   vector[K] beta;
   real<lower=0> sigma;
 }

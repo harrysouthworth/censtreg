@@ -89,7 +89,7 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
   X <- model.matrix(formula, data)
 
   if (any(y == limit)){
-    stop("values of y exactly at the limit: make them unabmiguous by putting them beyond the limit")
+    stop("values of y exactly at the limit: make them unambiguous by putting them beyond the limit")
   }
 
   if (sum(is.na(y)) > 0 | sum(is.na(X)) > 0){
@@ -122,6 +122,10 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
 
   if (sum(i) == 0){
     stop("there are no uncensored values")
+  }
+
+  if (length(limit) == 1){
+    limit <- rep(limit, sum(!i))
   }
 
   # getCensModel reports messages for debugging & testing purposes. We don't want them here
