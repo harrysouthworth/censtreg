@@ -6,7 +6,7 @@ data {
   matrix[N_cens, K] x_cens;
   real<lower=0> nu;
   real y_obs[N_obs];
-  real L[N_cens];
+  vector[N_cens] L;
 
   real sigma_params[2];
 }

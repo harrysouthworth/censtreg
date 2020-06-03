@@ -6,14 +6,14 @@ data {
   matrix[N_obs, K] x_obs;
   matrix[N_cens, K] x_cens;
   real y_obs[N_obs];
-  real L[N_cens];
+  vector[N_cens] L;
   real sigma_params[2];
 }
 transformed data{
-  maxL = max(L);
+  real maxL = max(L);
 }
 parameters {
-  real<upper=max(L)> y_tmp[N_cens];
+  vector<upper=max(L)>[N_cens] y_tmp;
   vector[K] beta;
   real<lower=0> sigma;
 }

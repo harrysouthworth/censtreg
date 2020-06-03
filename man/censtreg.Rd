@@ -7,13 +7,15 @@
 censtreg(
   formula,
   data,
+  censored,
   limit,
   upper = FALSE,
   chains = NULL,
   cores = NULL,
+  method = "estimate",
   iter = 2000,
   warmup = 1000,
-  lognu_params = c(nu = 6, mu = log(6), sigma = 10),
+  lognu_params = c(nu = 6, mu = log(6), sigma = 1),
   sigma_params = c(mu = 1, sigma = 100),
   nu = NULL,
   silent = FALSE,
@@ -31,10 +33,15 @@ censored, but as missing. The function determines what is censored by the
 values of the repsonse and the censoring limit, not by missing values or
 censoring flags.}
 
-\item{limit}{An integer dictating the censoring threshold. There is no
-default and this is a required argument. Note that if the formula contains
-a transformation of the response, you must remember to transform the
-limit as well. The arguement \code{upper} dictates if the censoring
+\item{censored}{A string naming a column in \code{data} that indicates if
+a response value is censored (\code{censored == 1}) or not (\code{censored == 0}).}
+
+\item{limit}{A vecotor that gives the censoring
+point. Often, but not necessarily, this column will hold a single value.
+Note that if the formula contains a transformation of the response, you
+must remember to transform the
+limit as well (which is why the argument requires a numeric vector, not the
+name of a column in the data). The arguement \code{upper} dictates if the censoring
 limit is a lower limit (i.e. left-censoring, censoring from below) or
 an upper limit (right-censoring or censoring from above).}
 
@@ -49,6 +56,10 @@ specifically, the number of available cores less 1.}
 \item{cores}{The number of cores to use. Defaults to \code{cores = NULL} and
 the function uses as many cores as chains, or the number of available cores
 less 1.}
+
+\item{method}{Either "estimate" the default, in which case the censored values
+are treated like parameters and are estimate; or "integrate", in which case
+the censored values are integrated out.}
 
 \item{iter}{The number of steps to run each Markov chain for. Defaults to
 \code{iter = 2000}.}
@@ -80,9 +91,9 @@ Linear regression for data with left-censored response and t-distributed residua
 The function uses the arguments to construct a call to \code{rstan::stan}.
   Not many of the available options for \code{rstan::stan} are manipulable
   through this function, but such things can be easily added if desired.
-  The function assumes the residuals are t-distributed and the kurtosis parameter
+  If the kurtosis parameter
   is treated as random. Computations are done on the scale of the log of the
-  kurtosis parameter, and a t-distribution centered at 6 with kurtosis parameter
+  kurtosis parameter, and a t-distribution centered at log(6) with kurtosis parameter
   6 is used as a prior because experience suggests taking logs and giving the
   sampler some clues about likely values aids chain convergence.
   The Stan code is largely copied from Section 4.1, "Censored Data" of the

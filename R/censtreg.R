@@ -74,6 +74,10 @@ censtreg <- function(formula, data, censored, limit, upper = FALSE, chains=NULL,
                      nu = NULL, silent = FALSE, ...){
   thecall <- match.call()
 
+  if (missing(censored) | missing(limit)){
+    stop("censored (string naming column) and limit (vector giving censoring thresholds) must be provided")
+  }
+
   checkPriorParams(lognu_params, sigma_params)
 
   if (is.null(chains)){
