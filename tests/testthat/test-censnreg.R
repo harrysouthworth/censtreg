@@ -130,7 +130,7 @@ test_that("Simulated censored values look sane", {
 
   f <- fitted(m, method = "impute", m = 1000)
   expect_true(all(f > unique(th)), label = "Simulated censored values > limit: upper")
-  expect_true(min(f - th) < .001, label = "Minimum simulated censored values close to limit: upper")
+  expect_true(min(f - th) < .001, label = "Minimum simulated censored values close to limit: lower")
 
   # Need to add test of unimodality - I've read that there's an example in the
   # book by Efron and Tibshirani
@@ -153,6 +153,6 @@ test_that("Simulated censored values look sane", {
                 silent = TRUE, upper = FALSE, nu = Inf)
 
   f <- fitted(m, method = "impute", m = 1000)
-  expect_true(all(f < unique(th)), label = "Simulated censored values are < limit: !upper")
-  expect_true(min(f - th) < .001, label = "Simulated censored values close to limit: !upper")
+  expect_true(all(f < unique(th)), label = "Simulated censored values are < limit: lower")
+  expect_true(min(f - th) < .001, label = "Simulated censored values close to limit: lower")
 })
