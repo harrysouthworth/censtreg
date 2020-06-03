@@ -13,17 +13,14 @@ transformed data{
 }
 parameters {
   vector<upper=max(L)>[N_cens] y_tmp;
-
-  //vector[N_cens]<upper=L> y_cens;
   vector[K] beta;
   real<lower=0> sigma;
 }
 transformed parameters{
   vector[N_cens] y_cens = y_tmp + L - maxL;
-  //y_cens = y_cens - maxL;
 }
 model {
   sigma ~ lognormal(sigma_params[1], sigma_params[2]);
   y_obs ~ normal(x_obs * beta, sigma);
-  y_tmp ~ normal(x_cens * beta, sigma);
+  y_cens ~ normal(x_cens * beta, sigma);
 }

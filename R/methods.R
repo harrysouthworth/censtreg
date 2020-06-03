@@ -104,14 +104,19 @@ fitted.censtreg <- function(object, method = "lp", what = mean, m = 10, ...){
       ycens <- t(sapply(ycens, function(X){
         sample(X, size = m, replace = FALSE)
       }))
-      ycens <- matrix(ycens, ncol = m, byrow = FALSE)
 
-      cy <- ifelse(object$upper & y >= object$limit, NA,
-                   ifelse(!object$upper & y<= object$limit, NA, y))
+      f <- t(ycens)
 
-      f <- matrix(rep(cy, m), ncol = m, byrow = FALSE)
+      if (FALSE){
+        ycens <- matrix(ycens, ncol = m, byrow = FALSE)
 
-      f[is.na(f)] <- ycens
+        cy <- ifelse(object$upper & y >= object$limit, NA,
+                     ifelse(!object$upper & y<= object$limit, NA, y))
+
+        f <- matrix(rep(cy, m), ncol = m, byrow = FALSE)
+
+        f[is.na(f)] <- ycens
+      }
     }
   }
 

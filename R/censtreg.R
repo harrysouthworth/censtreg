@@ -7,12 +7,16 @@
 #'   censored, but as missing. The function determines what is censored by the
 #'   values of the repsonse and the censoring limit, not by missing values or
 #'   censoring flags.
-#' @param limit An integer dictating the censoring threshold. There is no
-#'   default and this is a required argument. Note that if the formula contains
-#'   a transformation of the response, you must remember to transform the
-#'   limit as well. The arguement \code{upper} dictates if the censoring
+#' @param limit A vecotor that gives the censoring
+#'   point. Often, but not necessarily, this column will hold a single value.
+#'   Note that if the formula contains a transformation of the response, you
+#'   must remember to transform the
+#'   limit as well (which is why the argument requires a numeric vector, not the
+#'   name of a column in the data). The arguement \code{upper} dictates if the censoring
 #'   limit is a lower limit (i.e. left-censoring, censoring from below) or
 #'   an upper limit (right-censoring or censoring from above).
+#' @param censored A string naming a column in \code{data} that indicates if
+#'   a response value is censored (\code{censored == 1}) or not (\code{censored == 0}).
 #' @param upper Logical defaulting to \code{upper = FALSE} indicating that
 #'   \code{limit} defines a lower limit, not upper limit, for censoring (i.e.
 #'   left-censoring, not right-censoring).
@@ -62,7 +66,7 @@
 #'   of the mass to those kinds of intervals should only be weakly informative.
 #' @seealso fitted.censtreg
 #' @export censtreg
-censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NULL,
+censtreg <- function(formula, data, censored, limit, upper = FALSE, chains=NULL, cores=NULL,
                      method = "estimate",
                      iter = 2000, warmup = 1000,
                      lognu_params = c(nu = 6, mu = log(6), sigma = 1),
@@ -87,13 +91,9 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
 
   y <- model.response(model.frame(formula, data))
   X <- model.matrix(formula, data)
-
-  if (any(y == limit)){
-    stop("values of y exactly at the limit: make them unambiguous by putting them beyond the limit")
-  }
-
-  if (sum(is.na(y)) > 0 | sum(is.na(X)) > 0){
-    stop("censtreg does not support missing values")
+  censored <- d[, censored]
+  if (!all(sort(unique(censored)) == c(0, 1))){
+    stop("censoring variable should have values 0 or 1 only")
   }
 
   if (colnames(X)[1] == "(Intercept)"){
@@ -112,19 +112,21 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
   if (upper){
     y <- -y
     limit <- -limit
-    bl <- data.frame(index = (1:length(y))[y < limit], observed = -y[y < limit])
-  } else {
-    bl <- data.frame(index = (1:length(y))[y < limit], observed = y[y < limit])
   }
 
-  i <- y > limit
+  i <- censored == 0
+  if (any(y[!i] > limit[!i])){
+    warning("values labeled as censored but not in breach of limit")
+  }
+
+  if (sum(is.na((y[!i]))) > 0 | sum(is.na(X[!i, ])) > 0){
+    stop("missing values in uncensored response and associated predictors not allowed")
+  }
 
   if (sum(i) == length(y)){
     stop("there are no uncensored values")
-  }
-
-  if (length(limit) == 1){
-    limit <- rep(limit, sum(!i))
+  } else if (sum(i) == 0){
+    stop("there are no censored values")
   }
 
   # getCensModel reports messages for debugging & testing purposes. We don't want them here
@@ -133,7 +135,7 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
   sdata <- list(y_obs = y[i],
                 x_obs = X[i, , drop = FALSE], x_cens = X[!i, , drop = FALSE],
                 K = ncol(X), N_obs = sum(i), N_cens = sum(!i),
-                L = limit,
+                L = limit[!i],
                 lognu_params = lognu_params, sigma_params = sigma_params,
                 nu = nu)
 
@@ -154,15 +156,16 @@ censtreg <- function(formula, data, limit, upper = FALSE, chains=NULL, cores=NUL
     # o@samples is a list with one entry for each chain
     # Each chain is a list, not matrix, with an entry for each parameter
     o@sim$samples <- lapply(o@sim$samples, function(X){
-      which <- (1:length(X))[substring(names(X), 1, 5) == "beta["]
+      which <- (1:length(X))[substring(names(X), 1, 5) %in% c("beta[", "y_cen")]
       X[which] <- lapply(X[which], function(A) -A)
-
       X
     })
   }
 
+  breaches <- data[censored == 1, ]
+
   o <- list(model = o, call = thecall, formula = formula, data = data,
-            limit = limit, upper = upper, names = colnames(X), breaches = bl)
+            limit = limit, upper = upper, names = colnames(X), breaches = breaches)
 
   class(o) <- "censtreg"
   o
