@@ -21,9 +21,10 @@ test_that("Left-censored regression: posterior means match generating mechanism"
     x <- rt(1000, nu) * s
     y <- a +  b * x + rt(1000, nu) * s
 
-    d <- data.frame(x = x, y = y)#ifelse (y >= th, y, -Inf))
-    d$th <- quantile(y, prob = runif(1, .05, .4))
-    d$censored <- as.numeric(d$y <= d$th)
+
+    th <- quantile(y, prob = runif(1, .05, .4))
+
+    d <- data.frame(x = x, y = ifelse (y >= th, y, -Inf))
 
     m[[i]] <- censtreg(y ~ x, data = d, censored = "censored", limit = d$th,
                        silent = TRUE, nu = Inf)
