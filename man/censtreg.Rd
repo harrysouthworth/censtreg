@@ -12,7 +12,7 @@ censtreg(
   upper = FALSE,
   chains = NULL,
   cores = NULL,
-  method = "estimate",
+  method = "integrate",
   iter = 2000,
   warmup = 1000,
   lognu_params = c(nu = 6, mu = log(6), sigma = 1),
@@ -57,9 +57,9 @@ specifically, the number of available cores less 1.}
 the function uses as many cores as chains, or the number of available cores
 less 1.}
 
-\item{method}{Either "estimate" the default, in which case the censored values
+\item{method}{Either "estimate", in which case the censored values
 are treated like parameters and are estimate; or "integrate", in which case
-the censored values are integrated out.}
+the censored values are integrated out. Defaults to \code{method = "integrate"}.}
 
 \item{iter}{The number of steps to run each Markov chain for. Defaults to
 \code{iter = 2000}.}

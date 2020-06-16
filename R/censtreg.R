@@ -26,9 +26,9 @@
 #' @param cores The number of cores to use. Defaults to \code{cores = NULL} and
 #'   the function uses as many cores as chains, or the number of available cores
 #'   less 1.
-#' @param method Either "estimate" the default, in which case the censored values
+#' @param method Either "estimate", in which case the censored values
 #'   are treated like parameters and are estimate; or "integrate", in which case
-#'   the censored values are integrated out.
+#'   the censored values are integrated out. Defaults to \code{method = "integrate"}.
 #' @param iter The number of steps to run each Markov chain for. Defaults to
 #'   \code{iter = 2000}.
 #' @param lognu_params Prior parameters for the $t$-distribution used as the prior for
@@ -67,7 +67,7 @@
 #' @seealso fitted.censtreg
 #' @export censtreg
 censtreg <- function(formula, data, censored, limit, upper = FALSE, chains=NULL, cores=NULL,
-                     method = "estimate",
+                     method = "integrate",
                      iter = 2000, warmup = 1000,
                      lognu_params = c(nu = 6, mu = log(6), sigma = 1),
                      sigma_params = c(mu = 1, sigma = 100),
