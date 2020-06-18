@@ -7,7 +7,7 @@ stan_censnreg <- rstan::stan_model(file = file.path(here::here(), "src/stan_file
                                    model_name = "censnreg")
 
 ################################################################################
-## Models for data censored from below, estimating the censored values
+## Models for data censored from below, integrating over the censored values
 stan_censnreg_int <- rstan::stan_model(file = file.path(here::here(), "src/stan_files/censnreg_int.stan"),
                                        model_name = "censnreg_int")
 

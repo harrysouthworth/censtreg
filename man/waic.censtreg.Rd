@@ -14,5 +14,5 @@ Compute WAIC from a censtreg object
 }
 \details{
 The code has been copied and pasted from the Stan GitHub issues
-  pages
+  pages.
 }
