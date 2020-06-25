@@ -85,7 +85,7 @@ censtreg <- function(formula, data, censored, limit, upper = FALSE, chains=NULL,
     stop("limit should be a single number or a vector of length nrow(data)")
   }
   
-  #checkPriorParams(lognu_params, sigma_params)
+  checkPriorParams(lognu_params, sigma_params)
 
   if (is.null(chains)){
     chains <- parallel::detectCores() - 1
