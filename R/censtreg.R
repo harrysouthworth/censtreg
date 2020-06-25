@@ -78,6 +78,12 @@ censtreg <- function(formula, data, censored, limit, upper = FALSE, chains=NULL,
     stop("censored (string naming column) and limit (vector giving censoring thresholds) must be provided")
   }
 
+  if (length(limit) == 1){
+    limit <- rep(limit, length = nrow(data))
+  } else if (length(limit != nrow(data))){
+    stop("limit should be a single number of a vector of length nrow(data)")
+  }
+  
   checkPriorParams(lognu_params, sigma_params)
 
   if (is.null(chains)){
@@ -95,7 +101,7 @@ censtreg <- function(formula, data, censored, limit, upper = FALSE, chains=NULL,
 
   y <- model.response(model.frame(formula, data))
   X <- model.matrix(formula, data)
-  censored <- d[, censored]
+  censored <- data[, censored]
   if (!all(sort(unique(censored)) == c(0, 1))){
     stop("censoring variable should have values 0 or 1 only")
   }
