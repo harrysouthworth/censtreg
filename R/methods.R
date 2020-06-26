@@ -1,5 +1,4 @@
-#' @method print censtreg
-#' @export print.censtreg
+#' @export
 print.censtreg <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
   print(x$call)
   cat("\n")
@@ -18,8 +17,8 @@ print.censtreg <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
   invisible()
 }
 
-#' @method summary censtreg
-#' @export summary.censtreg
+
+#' @export
 summary.censtreg <- function(x, probs = c(.025, .25, .5, .75, .975),...){
   o <- rstan::summary(x$model, probs = probs)$summary
   o <- o[substring(rownames(o), 1, 7) != "y_cens[", ]
@@ -34,7 +33,7 @@ summary.censtreg <- function(x, probs = c(.025, .25, .5, .75, .975),...){
 }
 
 #' @method print summary.censtreg
-#' @export print.summary.censtreg
+#' @export
 print.summary.censtreg <- function(object, digits = max(3L, getOption("digits") - 3L), ...){
   breaches <- object[[2]]
 
@@ -53,8 +52,8 @@ print.summary.censtreg <- function(object, digits = max(3L, getOption("digits") 
   invisible()
 }
 
-#' @method plot censtreg
-#' @export plot.censtreg
+
+#' @export
 plot.censtreg <- function(x, y, what = "trace"){
   m <- x$model
   s <- rstan::summary(m)$summary
@@ -77,8 +76,7 @@ plot.censtreg <- function(x, y, what = "trace"){
 #' @return If the method is "lp" or "summary", a vector; otherwise a matrix.
 #' @details It's not very clear to me what use the returned values are when
 #'   \code{method = "summary"}.
-#' @method fitted censtreg
-#' @export fitted.censtreg
+#' @export
 fitted.censtreg <- function(object, method = "lp", what = mean, m = 10, ...){
   co <- coef(object)
 
@@ -123,8 +121,7 @@ fitted.censtreg <- function(object, method = "lp", what = mean, m = 10, ...){
   f
 }
 
-#' @method coef censtreg
-#' @export coef.censtreg
+#' @export
 coef.censtreg <- function(object, what = mean, ...){
   conames <- names(object$model)
   conames <- conames[startsWith(conames, "beta")]
@@ -154,8 +151,7 @@ coef.censtreg <- function(object, what = mean, ...){
 #'   Only used if \code{newdata} is unspecified.
 #' @param m The number of imputations of the censored response values.
 #'   Only used if \code{newdata} is unspecified.
-#' @method predict censtreg
-#' @export predict.censtreg
+#' @export
 predict.censtreg <- function(object, newdata, se.fit = FALSE, ci.fit = TRUE,
                              level = .950, method = "lp", what = mean, m = 10, ...){
   if (missing(newdata)){
@@ -190,8 +186,7 @@ predict.censtreg <- function(object, newdata, se.fit = FALSE, ci.fit = TRUE,
   }
 }
 
-#' @method residuals censtreg
-#' @export residuals.censtreg
+#' @export
 residuals.censtreg <- function(object, what = mean, ...){
   f <- fitted(object, method = "lp", what = what)
   y <- model.response(model.frame(object$formula, object$data))
