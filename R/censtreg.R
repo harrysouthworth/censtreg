@@ -8,7 +8,8 @@
 #'   values of the repsonse and the censoring limit, not by missing values or
 #'   censoring flags.
 #' @param limit A vecotor that gives the censoring
-#'   point. Often, but not necessarily, this column will hold a single value.
+#'   point, or a single number giving the censoring point. The former allows
+#'   differing censoring points over observations.
 #'   Note that if the formula contains a transformation of the response, you
 #'   must remember to transform the
 #'   limit as well (which is why the argument requires a numeric vector, not the
@@ -78,6 +79,12 @@ censtreg <- function(formula, data, censored, limit, upper = FALSE, chains=NULL,
     stop("censored (string naming column) and limit (vector giving censoring thresholds) must be provided")
   }
 
+  if (length(limit) == 1){
+    limit <- rep(limit, length = nrow(data))
+  } else if (length(limit) != nrow(data)){
+    stop("limit should be a single number or a vector of length nrow(data)")
+  }
+  
   checkPriorParams(lognu_params, sigma_params)
 
   if (is.null(chains)){
@@ -91,7 +98,7 @@ censtreg <- function(formula, data, censored, limit, upper = FALSE, chains=NULL,
     cores <- min(parallel::detectCores() - 1, chains)
   }
 
-  checkForTransformations(formula, thecall)
+  #checkForTransformations(formula, thecall)
 
   y <- model.response(model.frame(formula, data))
   X <- model.matrix(formula, data)
