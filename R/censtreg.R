@@ -84,7 +84,7 @@ censtreg <- function(formula, data, censored, limit, upper = FALSE, chains=NULL,
   } else if (length(limit) != nrow(data)){
     stop("limit should be a single number or a vector of length nrow(data)")
   }
-  
+
   checkPriorParams(lognu_params, sigma_params)
 
   if (is.null(chains)){
@@ -140,8 +140,13 @@ censtreg <- function(formula, data, censored, limit, upper = FALSE, chains=NULL,
     stop("there are no censored values")
   }
 
-  # getCensModel reports messages for debugging & testing purposes. We don't want them here
-  stanmod <- suppressMessages(getCensModel(nu, method))
+  # Vectors of length 1 need special treatment
+  N_cens <- sum(!i)
+  if (N_cens == 1){
+    L <- array(limit[!i], dim = 1)
+  } else {
+    L <- limit[!i]
+  }
 
   sdata <- list(y_obs = y[i],
                 x_obs = X[i, , drop = FALSE], x_cens = X[!i, , drop = FALSE],
@@ -149,6 +154,9 @@ censtreg <- function(formula, data, censored, limit, upper = FALSE, chains=NULL,
                 L = limit[!i],
                 lognu_params = lognu_params, sigma_params = sigma_params,
                 nu = nu)
+
+  # getCensModel reports messages for debugging & testing purposes. We don't want them here
+  stanmod <- suppressMessages(getCensModel(nu, method))
 
   if (silent){
     o <- rstan::sampling(stanmod, data = sdata,

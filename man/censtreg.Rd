@@ -37,7 +37,8 @@ censoring flags.}
 a response value is censored (\code{censored == 1}) or not (\code{censored == 0}).}
 
 \item{limit}{A vecotor that gives the censoring
-point. Often, but not necessarily, this column will hold a single value.
+point, or a single number giving the censoring point. The former allows
+differing censoring points over observations.
 Note that if the formula contains a transformation of the response, you
 must remember to transform the
 limit as well (which is why the argument requires a numeric vector, not the
