@@ -150,8 +150,8 @@ censtreg <- function(formula, data, censored, limit, upper = FALSE, chains=NULL,
 
   sdata <- list(y_obs = y[i],
                 x_obs = X[i, , drop = FALSE], x_cens = X[!i, , drop = FALSE],
-                K = ncol(X), N_obs = sum(i), N_cens = sum(!i),
-                L = limit[!i],
+                K = ncol(X), N_obs = sum(i), N_cens = N_cens,
+                L = L,
                 lognu_params = lognu_params, sigma_params = sigma_params,
                 nu = nu)
 
