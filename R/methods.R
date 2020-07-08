@@ -5,11 +5,11 @@ print.censtreg <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
 
   b <- x$breaches
 
-  cat(paste("There were", nrow(b), "values that breached the limit.\n\n"))
+  cat(paste("There were", nrow(b), "of", nrow(x$data),  "values that breached the limit.\n\n"))
 
   o <- rstan::summary(x$model)$summary
   o <- o[substring(rownames(o), 1, 7) != "y_cens[", c(1, 3)]
-  o <- o[substring(rownames(o), 1, 7) != "y_tmp[", c(1, 3)]
+  o <- o[substring(rownames(o), 1, 6) != "y_tmp[", c(1, 2)]
   o <- o[!(rownames(o) %in% c("lognu", "lp__")), ]
 
   rownames(o)[substring(rownames(o), 1, 5) == "beta["] <- x$names
