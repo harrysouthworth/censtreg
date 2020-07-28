@@ -168,7 +168,7 @@ predict.censtreg <- function(object, newdata, se.fit = FALSE, ci.fit = TRUE,
 
     co <- coef(object)
 
-    X <- model.matrix(object$formula[-2], newdata)
+    X <- model.matrix(object$formula[-2], newdata, xlev = object$xlevels)
 
     fit <- c(X %*% co)
     out <- matrix(fit, ncol = 1)

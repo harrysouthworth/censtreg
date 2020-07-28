@@ -99,9 +99,22 @@ censtreg <- function(formula, data, censored, limit, upper = FALSE, chains=NULL,
   }
 
   #checkForTransformations(formula, thecall)
+  mf <- model.frame(formula, data)
 
   y <- model.response(model.frame(formula, data))
   X <- model.matrix(formula, data)
+
+  xlevels <- lapply(mf, function(X){
+    if (is.factor(X) | is.ordered(X)){
+      levels(X)
+    } else if (is.character(X)){
+      unique(X)
+    } else {
+      NULL
+    }
+  })
+  xlevels[sapply(xlevels, is.null)] <- NULL
+
   censored <- data[, censored]
   if (!all(sort(unique(censored)) == c(0, 1))){
     stop("censoring variable should have values 0 or 1 only")
@@ -113,9 +126,12 @@ censtreg <- function(formula, data, censored, limit, upper = FALSE, chains=NULL,
     rX <- X
   }
 
-  u <- apply(rX, 2, function(z) length(unique(z)))
-  if (min(u) == 1){
-    stop("One or more covariates has zero variance")
+  if (ncol(X) > 1){
+    u <- apply(rX, 2, function(z) length(unique(z)))
+
+    if (min(u) == 1){
+      stop("One or more covariates has zero variance")
+    }
   }
 
   K <- ncol(X)
@@ -184,7 +200,8 @@ censtreg <- function(formula, data, censored, limit, upper = FALSE, chains=NULL,
   breaches <- data[censored == 1, ]
 
   o <- list(model = o, call = thecall, formula = formula, data = data,
-            limit = limit, upper = upper, names = colnames(X), breaches = breaches)
+            limit = limit, upper = upper, names = colnames(X), breaches = breaches,
+            xlevels = xlevels)
 
   class(o) <- "censtreg"
   o
