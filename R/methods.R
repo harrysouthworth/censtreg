@@ -80,6 +80,10 @@ plot.censtreg <- function(x, y, what = "trace"){
 #' @method fitted censtreg
 #' @export
 fitted.censtreg <- function(object, method = "lp", what = mean, m = 10, ...){
+  if(!(method %in% c("lp", "summary", "impute"))){
+    stop("method should be 'lp', 'summary' or 'impute'")
+  }
+
   co <- coef(object)
 
   X <- model.matrix(object$formula, object$data)
@@ -90,6 +94,10 @@ fitted.censtreg <- function(object, method = "lp", what = mean, m = 10, ...){
   } else {
     ynames <- names(object$model)
     ynames <- ynames[startsWith(ynames, "y_cens")]
+    if (length(ynames) == 0){
+      stop("no y chains in the model: did you use method = 'integrate'?")
+    }
+
     ycens <- rstan::extract(object$model, pars = ynames)
 
     if (method == "summary"){
