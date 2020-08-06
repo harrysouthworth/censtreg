@@ -3,17 +3,16 @@
 #' @param data A data frame. This should contain all the data, including the
 #'   censored values. Supposing censoring is from below, setting all response
 #'   variable values that are censored to be some value beneath the limit will
-#'   result in the correct model. Missing values are not treated as being
-#'   censored, but as missing. The function determines what is censored by the
-#'   values of the repsonse and the censoring limit, not by missing values or
-#'   censoring flags.
-#' @param limit A vecotor that gives the censoring
+#'   result in the correct model. Missing values are not allowed in either the
+#'   response or the predictors. The function determines what is censored by the
+#'   values of the response and the censoring limit.
+#' @param limit A vector that gives the censoring
 #'   point, or a single number giving the censoring point. The former allows
 #'   differing censoring points over observations.
 #'   Note that if the formula contains a transformation of the response, you
 #'   must remember to transform the
 #'   limit as well (which is why the argument requires a numeric vector, not the
-#'   name of a column in the data). The arguement \code{upper} dictates if the censoring
+#'   name of a column in the data). The argument \code{upper} dictates if the censoring
 #'   limit is a lower limit (i.e. left-censoring, censoring from below) or
 #'   an upper limit (right-censoring or censoring from above).
 #' @param censored A string naming a column in \code{data} that indicates if
@@ -103,6 +102,10 @@ censtreg <- function(formula, data, censored, limit, upper = FALSE, chains=NULL,
 
   y <- model.response(model.frame(formula, data))
   X <- model.matrix(formula, data)
+
+  if (any(is.na(y)) | any(is.na(X))){
+    stop("missing values are not allowed")
+  }
 
   xlevels <- lapply(mf, function(X){
     if (is.factor(X) | is.ordered(X)){
